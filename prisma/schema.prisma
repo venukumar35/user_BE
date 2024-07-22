@@ -1,0 +1,672 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("PRISMA_DATABASE_URL")
+}
+
+model Roles {
+    id        Int       @id @default(autoincrement())
+    name      String
+    isActive  Boolean   @default(true)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    user      User[]
+}
+
+model SyncDataLastId {
+    id        Int       @id @default(autoincrement())
+    lastId    Int
+    isActive  Boolean   @default(true)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+}
+
+model ProductCategory {
+    id          Int           @id @default(autoincrement())
+    name        String        @unique
+    genderId    Int
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    deletedAt   DateTime?
+    gender      Gender        @relation(fields: [genderId], references: [id])
+    productType ProductType[]
+}
+
+model ProductType {
+    id                Int               @id @default(autoincrement())
+    itemsName         String
+    productCategoryId Int
+    createdAt         DateTime          @default(now())
+    updatedAt         DateTime          @updatedAt
+    deletedAt         DateTime?
+    ProductCategory   ProductCategory   @relation(fields: [productCategoryId], references: [id])
+    sizes             ProductTypeSize[]
+    product           Product[]
+}
+
+model ProductTypeSize {
+    id           Int                   @id @default(autoincrement())
+    size         String
+    ietmsId      Int
+    createdAt    DateTime              @default(now())
+    updatedAt    DateTime              @updatedAt
+    deletedAt    DateTime?
+    aviableSizes ProductAviableSizes[]
+    productType  ProductType           @relation(fields: [ietmsId], references: [id])
+}
+
+model Gender {
+    id              Int               @id @default(autoincrement())
+    name            String            @unique
+    createdAt       DateTime          @default(now())
+    updatedAt       DateTime          @updatedAt
+    deletedAt       DateTime?
+    productCategory ProductCategory[]
+    user            User[]
+}
+
+model Country {
+    id             Int       @id @default(autoincrement())
+    name           String    @unique
+    timezoneOffset Int
+    dialCode       String
+    isActive       Boolean   @default(true)
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+    deletedAt      DateTime?
+    state          State[]
+}
+
+model State {
+    id        Int       @id @default(autoincrement())
+    name      String
+    countryId Int
+    isActive  Boolean   @default(true)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    country   Country   @relation(fields: [countryId], references: [id])
+    district  Address[]
+}
+
+model Address {
+    id          Int           @id @default(autoincrement())
+    doorNumber  String
+    streetName  String
+    pinCode     String
+    stateId     Int
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    deletedAt   DateTime?
+    state       State         @relation(fields: [stateId], references: [id])
+    userAddress UserAddress[]
+}
+
+model UserAddress {
+    id        Int       @id @default(autoincrement())
+    addressId Int
+    userId    Int
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    address   Address   @relation(fields: [addressId], references: [id])
+    user      User      @relation(fields: [userId], references: [id])
+}
+
+model User {
+    id              Int                @id @default(autoincrement())
+    username        String
+    email           String             @unique
+    mobile          String
+    token           String?
+    roleId          Int                @default(2)
+    genderId        Int
+    isActive        Boolean            @default(true)
+    createdAt       DateTime           @default(now())
+    updatedAt       DateTime           @updatedAt
+    deletedAt       DateTime?
+    userProduct     Product[]
+    userAddress     UserAddress[]
+    addCart         Cart[]
+    wishlist        Wishlist[]
+    loginRequests   UserLoginRequest[]
+    ProductReview   ProductReview[]
+    order           Order[]
+    userSearchItems SearchItems[]
+    password        UserPassword[]
+    roles           Roles              @relation(fields: [roleId], references: [id])
+    gender          Gender             @relation(fields: [genderId], references: [id])
+}
+
+model ProductOwner {
+    id                Int       @id @default(autoincrement())
+    syncUserId        Int
+    ownerName         String
+    ownerEmail        String
+    ownerMobile       String
+    storeName         String
+    storeAddress      String
+    storeCity         String
+    storePincode      String
+    storeState        String
+    customerCareEmail String
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @updatedAt
+    deletedAt         DateTime?
+    product           Product[]
+}
+
+model UserPassword {
+    id        Int       @id @default(autoincrement())
+    password  String
+    userId    Int
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    user      User      @relation(fields: [userId], references: [id])
+}
+
+model SearchItems {
+    id         Int       @id @default(autoincrement())
+    searchName String
+    userId     Int
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+    deletedAt  DateTime?
+    User       User      @relation(fields: [userId], references: [id])
+}
+
+model Order {
+    id        Int       @id @default(autoincrement())
+    userId    Int
+    productId Int
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    user      User      @relation(fields: [userId], references: [id])
+    product   Product   @relation(fields: [productId], references: [id])
+}
+
+model UserLoginRequest {
+    id        Int       @id @default(autoincrement())
+    userId    Int
+    email     String
+    mobile    String?
+    otp       String
+    isUsed    Boolean   @default(false)
+    isActive  Boolean   @default(true)
+    user      User      @relation(fields: [userId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+}
+
+model Product {
+    id                Int                 @id @default(autoincrement())
+    syncId            Int
+    title             String
+    price             Float
+    productTypeId     Int
+    productOwnerId    Int?
+    userId            Int?
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
+    deletedAt         DateTime?
+    color             ProductColor[]
+    offer             Offer[]
+    isActive          Boolean             @default(true)
+    seasonalDresses   SeasonalDresses[]
+    productType       ProductType         @relation(fields: [productTypeId], references: [id])
+    user              User?               @relation(fields: [userId], references: [id])
+    priceHistory      PriceHistory[]
+    commonDescription CommonDescription[]
+    delivery          DeleveryPeriod[]
+    returns           ReturnedProduct[]
+    cart              Cart[]
+    wishlistItem      WishlistItem[]
+    productReviews    ProductReview[]
+    order             Order[]
+    productOwner      ProductOwner?       @relation(fields: [productOwnerId], references: [id])
+}
+
+model ProductReview {
+    id        Int       @id @default(autoincrement())
+    productId Int
+    userId    Int
+    review    String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    product   Product   @relation(fields: [productId], references: [id])
+    user      User      @relation(fields: [userId], references: [id])
+}
+
+model ReturnedProduct {
+    id        Int       @id @default(autoincrement())
+    productId Int
+    returns   Int
+    isActive  Boolean   @default(true)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    product   Product   @relation(fields: [productId], references: [id])
+}
+
+model DeleveryPeriod {
+    id                    Int       @id @default(autoincrement())
+    productId             Int
+    deliveryForMetroCitys Int
+    deliveryForOtherCitys Int
+    isActive              Boolean   @default(true)
+    createdAt             DateTime  @default(now())
+    updatedAt             DateTime  @updatedAt
+    deletedAt             DateTime?
+    product               Product   @relation(fields: [productId], references: [id])
+}
+
+model ProductColor {
+    id            Int                   @id @default(autoincrement())
+    productId     Int
+    colors        String
+    isActive      Boolean               @default(true)
+    createdAt     DateTime              @default(now())
+    updatedAt     DateTime              @updatedAt
+    deletedAt     DateTime?
+    product       Product               @relation(fields: [productId], references: [id])
+    colorSize     ProductAviableSizes[]
+    productImages ProductImages[]
+}
+
+model PriceHistory {
+    id        Int       @id @default(autoincrement())
+    price     Int
+    productId Int
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    Product   Product   @relation(fields: [productId], references: [id])
+}
+
+model ProductAviableSizes {
+    id                Int               @id @default(autoincrement())
+    quantity          Int
+    productColorId    Int
+    productTypeSizeId Int
+    history           QuantityHistory[]
+    createdAt         DateTime          @default(now())
+    updatedAt         DateTime          @updatedAt
+    deletedAt         DateTime?
+    productColor      ProductColor      @relation(fields: [productColorId], references: [id])
+    productTypeSize   ProductTypeSize   @relation(fields: [productTypeSizeId], references: [id])
+}
+
+model SeasonalDresses {
+    id        Int       @id @default(autoincrement())
+    seasonal  String
+    productId Int
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    product   Product   @relation(fields: [productId], references: [id])
+}
+
+model ProductImages {
+    id             Int           @id @default(autoincrement())
+    imageUrl       String
+    productColorId Int
+    isActive       Boolean       @default(true)
+    createdAt      DateTime      @default(now())
+    updatedAt      DateTime      @updatedAt
+    deletedAt      DateTime?
+    productColor   ProductColor? @relation(fields: [productColorId], references: [id])
+}
+
+model CommonDescription {
+    id                  Int                   @id @default(autoincrement())
+    fit                 String?
+    materail            String
+    care                String
+    brandName           String
+    origin              String
+    productId           Int
+    occasion            String
+    specialFeature      String?
+    createdAt           DateTime              @default(now())
+    updatedAt           DateTime              @updatedAt
+    deletedAt           DateTime?
+    product             Product               @relation(fields: [productId], references: [id])
+    topDescription      TopDescription[]
+    pantDescription     BottomDescription[]
+    kurtasDescription   KurtasDescription[]
+    shoesDescription    ShoesDescription[]
+    innerDescription    InnersDescription[]
+    watchesDescription  WatchesDescription[]
+    perfumesDescription PerfumesDescription[]
+}
+
+model TopDescription {
+    id                  Int                 @id @default(autoincrement())
+    productDescription  String?
+    sleeveTypeId        Int
+    weight              Int?
+    chest               Int
+    shoulder            Int
+    neckTypeId          Int
+    type                String?
+    colorFamily         String?
+    printAndPattern     String?
+    length              Int
+    pocket              String
+    commonDescriptionId Int
+    createdAt           DateTime            @default(now())
+    updatedAt           DateTime            @updatedAt
+    deletedAt           DateTime?
+    commonDescription   CommonDescription?  @relation(fields: [commonDescriptionId], references: [id])
+    sleeveType          SleeveType          @relation(fields: [sleeveTypeId], references: [id])
+    neckType            NeckType            @relation(fields: [neckTypeId], references: [id])
+    bottomDescription   BottomDescription[]
+}
+
+model BottomDescription {
+    id                  Int                 @id @default(autoincrement())
+    productDescription  String?
+    weight              Int?
+    printAndPattern     String
+    length              Int
+    waist               Int
+    hip                 Int
+    commonDescriptionId Int
+    type                String?
+    colorFamily         String?
+    pocket              String?
+    kurtasDescriptionId Int?
+    topDescriptionId    Int?
+    beltLoop            Boolean             @default(true)
+    typeOfPantId        Int
+    typesOfPleatsId     Int
+    typesOfLengthId     Int
+    createdAt           DateTime            @default(now())
+    updatedAt           DateTime            @updatedAt
+    deletedAt           DateTime?
+    typesOfPants        TypesOfBottom       @relation(fields: [typeOfPantId], references: [id])
+    typesOfPleats       TypesOfPleats       @relation(fields: [typesOfPleatsId], references: [id])
+    typesOfLength       TypesOfLengthBottom @relation(fields: [typesOfLengthId], references: [id])
+    commonDescription   CommonDescription   @relation(fields: [commonDescriptionId], references: [id])
+    kurtasDescription   KurtasDescription?  @relation(fields: [kurtasDescriptionId], references: [id])
+    topDescription      TopDescription?     @relation(fields: [topDescriptionId], references: [id])
+}
+
+model KurtasDescription {
+    id                      Int                 @id @default(autoincrement())
+    work                    String?
+    productDescription      String
+    chest                   Int
+    shoulder                Int
+    transparencyOfTheFabric Boolean             @default(false)
+    kurtasLengthTypeId      Int
+    weight                  Int?
+    colorFamily             String?
+    pocket                  String
+    type                    String
+    printAndpattern         String?
+    kurtasNeckTypeId        Int
+    kurtasSleeveTypeId      Int
+    commonDescriptionId     Int
+    isActive                Boolean             @default(true)
+    createdAt               DateTime            @default(now())
+    updatedAt               DateTime            @updatedAt
+    deletedAt               DateTime?
+    kurtasLengthType        KurtasLengthType    @relation(fields: [kurtasLengthTypeId], references: [id])
+    neckType                NeckType            @relation(fields: [kurtasNeckTypeId], references: [id])
+    sleeveType              SleeveType          @relation(fields: [kurtasSleeveTypeId], references: [id])
+    commonDescription       CommonDescription   @relation(fields: [commonDescriptionId], references: [id])
+    bottomDescription       BottomDescription[]
+}
+
+model ShoesDescription {
+    id                  Int               @id @default(autoincrement())
+    pattern             String?
+    footLength          String
+    type                String
+    soleMaterial        String?
+    printAndPattern     String?
+    upperMaterial       String?
+    closure             String?
+    toeType             String
+    weight              Int?
+    colorFamily         String?
+    productDescription  String?
+    packageContains     Int?
+    commonDescriptionId Int
+    warranty            Warranty[]
+    isActive            Boolean           @default(true)
+    createdAt           DateTime          @default(now())
+    updatedAt           DateTime          @updatedAt
+    deletedAt           DateTime?
+    commonDescription   CommonDescription @relation(fields: [commonDescriptionId], references: [id])
+}
+
+model WatchesDescription {
+    id                  Int               @id @default(autoincrement())
+    type                String? //Like single or couple
+    weight              Int
+    model               String
+    dialShape           String
+    printAndPattern     String?
+    dialDiameter        String //in mm
+    dialColor           String
+    strapColor          String
+    colorFamily         String?
+    productDescription  String?
+    commonDescriptionId Int
+    isActive            Boolean           @default(true)
+    createdAt           DateTime          @default(now())
+    updatedAt           DateTime          @updatedAt
+    deletedAt           DateTime?
+    warranty            Warranty[]
+    commonDescription   CommonDescription @relation(fields: [commonDescriptionId], references: [id])
+}
+
+model PerfumesDescription {
+    id                  Int               @id @default(autoincrement())
+    productDescription  String
+    type                String?
+    materialDescription String //material used to make
+    weight              Int
+    commonDescriptionId Int
+    isActive            Boolean           @default(true)
+    createdAt           DateTime          @default(now())
+    updatedAt           DateTime          @updatedAt
+    deletedAt           DateTime?
+    commonDescription   CommonDescription @relation(fields: [commonDescriptionId], references: [id])
+}
+
+model InnersDescription {
+    id                  Int               @id @default(autoincrement())
+    type                String
+    productDescription  String
+    weight              Int?
+    length              Int
+    waistRise           Int
+    printAndPattern     String?
+    packageContains     Int
+    lookAndFeel         String
+    colorFamily         String?
+    vestsSleeveTypeId   Int?
+    vestsNeckTypeId     Int?
+    commonDescriptionId Int
+    multiColors         Boolean           @default(true)
+    sleeveType          SleeveType?       @relation(fields: [vestsSleeveTypeId], references: [id])
+    neckType            NeckType?         @relation(fields: [vestsNeckTypeId], references: [id])
+    commonDescription   CommonDescription @relation(fields: [commonDescriptionId], references: [id])
+}
+
+model Warranty {
+    id                 Int                 @id @default(autoincrement())
+    shoesDescriptionId Int?
+    watchsId           Int?
+    warrantyPeriod     Int
+    isActive           Boolean             @default(true)
+    createdAt          DateTime            @default(now())
+    updatedAt          DateTime            @updatedAt
+    deletedAt          DateTime?
+    shoesDescription   ShoesDescription?   @relation(fields: [shoesDescriptionId], references: [id])
+    watches            WatchesDescription? @relation(fields: [watchsId], references: [id])
+}
+
+model SleeveType {
+    id                Int                 @id @default(autoincrement())
+    name              String
+    isActive          Boolean             @default(true)
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
+    deletedAt         DateTime?
+    kurtasDescription KurtasDescription[]
+    innersDescription InnersDescription[]
+    topDescription    TopDescription[]
+}
+
+model NeckType {
+    id                Int                 @id @default(autoincrement())
+    name              String
+    isActive          Boolean             @default(true)
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
+    deletedAt         DateTime?
+    kurtasDescription KurtasDescription[]
+    innersDescription InnersDescription[]
+    topDescription    TopDescription[]
+}
+
+model KurtasLengthType {
+    id                Int                 @id @default(autoincrement())
+    name              String
+    isActive          Boolean             @default(true)
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
+    deletedAt         DateTime?
+    kurtasDescription KurtasDescription[]
+}
+
+model TypesOfBottom {
+    id          Int                 @id @default(autoincrement())
+    name        String
+    isActive    Boolean             @default(true)
+    createdAt   DateTime            @default(now())
+    updatedAt   DateTime            @updatedAt
+    deletedAt   DateTime?
+    description BottomDescription[]
+}
+
+model TypesOfPleats {
+    id          Int                 @id @default(autoincrement())
+    name        String
+    isActive    Boolean             @default(true)
+    createdAt   DateTime            @default(now())
+    updatedAt   DateTime            @updatedAt
+    deletedAt   DateTime?
+    description BottomDescription[]
+}
+
+model TypesOfLengthBottom {
+    id          Int                 @id @default(autoincrement())
+    name        String
+    isActive    Boolean             @default(true)
+    createdAt   DateTime            @default(now())
+    updatedAt   DateTime            @updatedAt
+    deletedAt   DateTime?
+    description BottomDescription[]
+}
+
+model QuantityHistory {
+    id                    Int                 @id @default(autoincrement())
+    quantity              Int
+    productAviableSizesId Int
+    timestamp             DateTime            @default(now())
+    isActive              Boolean             @default(true)
+    createdAt             DateTime            @default(now())
+    updatedAt             DateTime            @updatedAt
+    deletedAt             DateTime?
+    productAviableSizes   ProductAviableSizes @relation(fields: [productAviableSizesId], references: [id])
+}
+
+model Offer {
+    id              Int             @id @default(autoincrement())
+    productId       Int
+    offerPercntage  Float
+    offerPrice      Float
+    currentPrice    Float
+    offerQuantity   Int
+    currentQuantity Int
+    isActive        Boolean         @default(true)
+    createdAt       DateTime        @default(now())
+    updatedAt       DateTime        @updatedAt
+    deletedAt       DateTime?
+    product         Product         @relation(fields: [productId], references: [id])
+    offerValidity   OfferValidity[]
+}
+
+model OfferValidity {
+    id                     Int                    @id @default(autoincrement())
+    fromDate               DateTime
+    toDate                 DateTime
+    fromTime               DateTime
+    toTime                 DateTime
+    monday                 Boolean
+    tuesday                Boolean
+    wednesday              Boolean
+    thursday               Boolean
+    friday                 Boolean
+    saturday               Boolean
+    sunday                 Boolean
+    offerId                Int
+    offerPromotionPeriodId Int?                   @unique
+    isActive               Boolean                @default(true)
+    createdAt              DateTime               @default(now())
+    updatedAt              DateTime               @updatedAt
+    deletedAt              DateTime?
+    offer                  Offer?                 @relation(fields: [offerId], references: [id])
+    offerPromotionPeriod   OfferPromotionPeriods? @relation(fields: [offerPromotionPeriodId], references: [id])
+}
+
+model OfferPromotionPeriods {
+    id            Int            @id @default(autoincrement())
+    name          String
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+    deletedAt     DateTime?
+    offerValidity OfferValidity?
+}
+
+model Cart {
+    id           Int       @id @default(autoincrement())
+    userId       Int
+    productId    Int
+    isCheckedOut Boolean //consider as buyed
+    isRemoved    Boolean
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    deletedAt    DateTime?
+    user         User      @relation(fields: [userId], references: [id])
+    product      Product   @relation(fields: [productId], references: [id])
+}
+
+model Wishlist {
+    id     Int            @id @default(autoincrement())
+    userId Int            @unique
+    items  WishlistItem[]
+    user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WishlistItem {
+    id         Int      @id @default(autoincrement())
+    wishlistId Int
+    productId  Int
+    wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+    product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
